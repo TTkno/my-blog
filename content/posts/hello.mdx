@@ -1,0 +1,68 @@
+---
+title: "Hello 算竞博客"
+date: "2026-01-03"
+tags: ["intro", "cp"]
+---
+
+# 第一篇
+
+行内公式：$O(n \log n)$
+
+块级公式：
+$$
+dp[i] = \min_{j<i} (dp[j] + cost(j,i))
+$$
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+  ios::sync_with_stdio(false);
+  cin.tie(nullptr);
+  return 0;
+}
+---
+
+## 6. 写“读文章”的代码（从文件夹读 MDX）
+创建：`src/lib/posts.ts`
+
+```ts
+import fs from "node:fs"
+import path from "node:path"
+import matter from "gray-matter"
+
+const POSTS_DIR = path.join(process.cwd(), "content", "posts")
+
+export type PostMeta = {
+  title: string
+  date: string
+  tags?: string[]
+}
+
+export type PostListItem = {
+  slug: string
+  meta: PostMeta
+}
+
+export function getAllPosts(): PostListItem[] {
+  if (!fs.existsSync(POSTS_DIR)) return []
+
+  const files = fs.readdirSync(POSTS_DIR).filter((f) => f.endsWith(".mdx"))
+
+  return files
+    .map((file) => {
+      const slug = file.replace(/\.mdx$/, "")
+      const raw = fs.readFileSync(path.join(POSTS_DIR, file), "utf8")
+      const { data } = matter(raw)
+      return { slug, meta: data as PostMeta }
+    })
+    .sort((a, b) => (a.meta.date < b.meta.date ? 1 : -1))
+}
+
+export function getPostBySlug(slug: string): { meta: PostMeta; content: string } {
+  const fullPath = path.join(POSTS_DIR, `${slug}.mdx`)
+  const raw = fs.readFileSync(fullPath, "utf8")
+  const { data, content } = matter(raw)
+  return { meta: data as PostMeta, content }
+}

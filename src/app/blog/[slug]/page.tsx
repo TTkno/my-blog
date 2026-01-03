@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation"
 import { compileMDX } from "next-mdx-remote/rsc"
 import remarkMath from "remark-math"
 import rehypeKatex from "rehype-katex"
@@ -5,14 +6,25 @@ import rehypePrettyCode from "rehype-pretty-code"
 
 import { getAllPosts, getPostBySlug, type PostMeta } from "@/lib/posts"
 
-export async function generateStaticParams() {
+export function generateStaticParams() {
   return getAllPosts().map((p) => ({ slug: p.slug }))
 }
 
-export default async function PostPage({ params }: { params: { slug: string } }) {
-  const { meta, content } = getPostBySlug(params.slug)
+export default async function PostPage({
+  params,
+}: {
+  // ✅ Next 16 里 params 可能是 Promise
+  params: Promise<{ slug: string }>
+}) {
+  // ✅ 先解包
+  const { slug } = await params
 
-  const { content: rendered } = await compileMDX({
+  // ✅ 防呆
+  if (!slug || slug === "undefined") notFound()
+
+  const { meta, content } = getPostBySlug(slug)
+
+  const { content: rendered } = await compileMDX<PostMeta>({
     source: content,
     options: {
       mdxOptions: {

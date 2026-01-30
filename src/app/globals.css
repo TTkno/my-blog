@@ -1,26 +1,218 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
+/* =========================================================
+   1) Design Tokens (统一主题：只改这里，全站跟着变)
+   ========================================================= */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* surfaces */
+  --bg: 246 248 252;
+  --surface: 255 255 255;
+  --surface2: 245 247 252;
+
+  /* text */
+  --text: 17 24 39;
+  --muted: 71 85 105;
+
+  /* ui */
+  --border: 226 232 240;
+  --accent: 16 185 129;   /* emerald */
+  --accent2: 59 130 246;  /* blue */
+  --ring: 99 102 241;     /* indigo */
+
+  --radius: 22px;
+  --shadow: 0 18px 60px rgba(15, 23, 42, 0.08);
+  --shadow2: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html.dark {
+  --bg: 12 16 22;
+  --surface: 16 21 29;
+  --surface2: 22 29 39;
+
+  --text: 232 237 245;
+  --muted: 160 170 185;
+
+  --border: 42 52 68;
+  --ring: 59 130 246;
+
+  --shadow: 0 20px 70px rgba(0, 0, 0, 0.35);
+  --shadow2: 0 10px 30px rgba(0, 0, 0, 0.28);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* =========================================================
+   2) Base (全局手感)
+   ========================================================= */
+html {
+  font-family: 'Noto Sans SC', sans-serif;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
+  font-feature-settings: "rlig" 1, "calt" 1;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* =========================================================
+   3) Components (可复用组件)
+   ========================================================= */
+.card {
+  background: rgb(var(--surface));
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow2);
+  transform: translateY(-1px);
+}
+
+.chip {
+  background: rgb(var(--surface2));
+  border: 1px solid rgb(var(--border));
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: rgb(var(--muted));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.chip-accent {
+  background: rgb(var(--accent));
+  border-color: rgb(var(--accent));
+  color: white;
+}
+
+.muted {
+  color: rgb(var(--muted));
+}
+
+/* =========================================================
+   4) Utilities (辅助类)
+   ========================================================= */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(16, 21, 29, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* =========================================================
+   5) 阅读体验增强样式
+   ========================================================= */
+:root {
+  --reading-font-size: 16px;
+}
+
+/* 专注模式样式 */
+.focus-mode {
+  --reading-font-size: 18px;
+}
+
+.focus-mode .sidebar,
+.focus-mode .mobile-sidebar,
+.focus-mode .profile-card,
+.focus-mode .glass-header,
+.focus-mode .back-to-top {
+  display: none !important;
+}
+
+/* 字体大小控制 */
+.reading-enhanced .prose {
+  font-size: var(--reading-font-size) !important;
+  line-height: calc(1.7 + (var(--reading-font-size) - 16) * 0.02) !important;
+}
+
+/* =========================================================
+   6) 自定义滚动条
+   ========================================================= */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--border));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--muted));
+}
+
+/* =========================================================
+   7) 代码块样式
+   ========================================================= */
+.prose pre {
+  background: rgb(30, 30, 30) !important;
+  color: rgb(248, 248, 242) !important;
+  border-radius: 8px !important;
+  padding: 1rem !important;
+  margin: 1.5rem 0 !important;
+  overflow-x: auto !important;
+}
+
+.prose code {
+  background: rgb(var(--surface2)) !important;
+  color: rgb(var(--text)) !important;
+  padding: 0.2rem 0.4rem !important;
+  border-radius: 4px !important;
+  font-size: 0.875em !important;
+}
+
+/* =========================================================
+   8) 响应式设计
+   ========================================================= */
+@media (max-width: 768px) {
+  .card {
+    border-radius: 16px;
+  }
+}
+
+/* =========================================================
+   9) 动画效果
+   ========================================================= */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* =========================================================
+   10) 打印样式
+   ========================================================= */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .prose {
+    max-width: none !important;
+  }
 }

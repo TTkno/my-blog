@@ -1,0 +1,61 @@
+---
+title: "功能测试：目录 / 代码高亮 / 数学 / 标签 / 预览"
+date: "2026-01-06"
+tags: ["Test","dp","数学","UI"]
+description: "一篇用来测试：TOC、rehype-pretty-code、KaTeX、tags 跳转、搜索预览、以及上一篇/下一篇。"
+collection: "note"
+---
+
+## 这篇文章用来测什么？
+
+你可以用它测试：
+
+- ✅ 目录（TOC）：H2/H3/H4 是否被抓到，右侧目录点击是否能滚动到对应位置
+- ✅ 代码高亮：主题是否生效
+- ✅ 数学公式：KaTeX/Math 是否正常渲染（重点测 cases）
+- ✅ Tags：标签页能否展示同标签文章
+- ✅ 搜索（Ctrl + K）：能否搜到 description / tags / title，预览是否显示摘要
+- ✅ 上一篇/下一篇：底部导航是否出现并能跳转
+- ✅ 标题锚点：hover 出现 #（如果你启用了 autolink headings）
+
+---
+
+## 目录测试（H2 / H3 / H4）
+
+### H3：复杂度小结
+
+如果你看到目录里出现了这条，说明 H3 被正确抓到了。
+
+#### H4：更深一层
+
+如果目录里也出现了这条，说明 H4 也被正确抓到了。
+
+---
+
+## 数学公式测试
+
+行内公式：设状态转移为 $dp[i] = \max(dp[i-1], dp[i-2] + a_i)$
+
+块级公式（cases 测试）：
+
+$$
+dp[i] =
+\begin{cases}
+0 & i=0 \\
+a_1 & i=1 \\
+\max(dp[i-1], dp[i-2] + a_i) & i \ge 2
+\end{cases}
+$$
+
+---
+
+## 代码块测试：TypeScript
+
+```ts
+type Pair = { x: number; y: number }
+
+export function dist(a: Pair, b: Pair) {
+  const dx = a.x - b.x
+  const dy = a.y - b.y
+  return Math.hypot(dx, dy)
+}

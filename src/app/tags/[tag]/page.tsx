@@ -1,0 +1,105 @@
+import Link from "next/link"
+import { getAllPosts } from "@/lib/posts"
+
+const BAD = new Set(["", "undefined", "null", "nan"])
+const keyOf = (v: unknown) => {
+  const s = String(v ?? "").trim()
+  const k = s.toLowerCase()
+  if (BAD.has(k)) return ""
+  return k
+}
+
+export default async function TagTimelinePage({
+  params,
+}: {
+  params: Promise<{ tag: string }>
+}) {
+  const { tag } = await params
+  const tagKey = keyOf(decodeURIComponent(tag ?? ""))
+
+console.log("[TagPage] raw tag param =", tag)
+console.log("[TagPage] decoded =", decodeURIComponent(tag ?? ""), "tagKey =", tagKey)
+
+  const all = getAllPosts()
+  
+  const posts = all
+    .filter((p) => (p.meta.tags ?? []).some((t) => keyOf(t) === tagKey))
+    .slice()
+    .sort((a, b) => (a.meta.date < b.meta.date ? 1 : -1))
+
+  // 展示名：从文章里找一个原始 tag（比如你写的是 “DP”）
+  let display = tagKey
+  for (const p of posts) {
+    const hit = (p.meta.tags ?? []).find((t) => keyOf(t) === tagKey)
+    if (hit) {
+      display = String(hit).trim() || tagKey
+      break
+    }
+  }
+
+  // year -> posts
+  const map = new Map<string, typeof posts>()
+  for (const p of posts) {
+    const year = (p.meta.date ?? "").slice(0, 4) || "Unknown"
+    map.set(year, [...(map.get(year) ?? []), p])
+  }
+  const years = Array.from(map.keys()).sort((a, b) => (a < b ? 1 : -1))
+
+  return (
+    <div className="card p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold">Tag：{display || "?"}</h1>
+          <p className="mt-1 text-sm muted">{posts.length} 篇文章</p>
+        </div>
+        <Link className="text-sm hover:opacity-80" href="/tags">
+          ← Back
+        </Link>
+      </div>
+
+      {posts.length === 0 ? (
+        <p className="mt-8 text-sm muted">
+          这个标签下还没有文章（或标签大小写/空格不一致）。
+        </p>
+      ) : (
+        <div className="relative mt-8 pl-10">
+          <div
+            className="absolute left-4 top-0 bottom-0 w-px"
+            style={{ background: "rgb(var(--border))" }}
+          />
+
+          {years.map((y) => (
+            <section key={y} className="mb-10">
+              <h2 className="text-4xl font-semibold tracking-tight">{y}</h2>
+
+              <ul className="mt-5 space-y-6">
+                {(map.get(y) ?? []).map(({ slug, meta }) => {
+                  const mmdd = (meta.date ?? "").slice(5)
+                  return (
+                    <li key={slug} className="relative">
+                      <span
+                        className="absolute -left-[1.1rem] top-2 h-2 w-2 rounded-full"
+                        style={{ background: "rgb(var(--border))" }}
+                      />
+
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 text-sm muted">{mmdd}</div>
+                        <Link className="hover:opacity-80" href={`/blog/${slug}`}>
+                          {meta.title}
+                        </Link>
+                        <div
+                          className="flex-1 border-b border-dashed"
+                          style={{ borderColor: "rgb(var(--border))" }}
+                        />
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

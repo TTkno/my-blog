@@ -17,15 +17,17 @@ export function MainWithSidebar({
   const hideSidebar = pathname ? isBlogPostPath(pathname) : false
 
   if (hideSidebar) {
-    return <section className="min-w-0">{children}</section>
+    return <section className="min-w-0 w-full">{children}</section>
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-[320px_1fr]">
-      <aside className="hidden md:block md:sticky md:top-28 md:h-fit md:self-start">
-        {sidebar}
-      </aside>
-      <section className="min-w-0">{children}</section>
+    <div className="app-container w-full">
+      <div className="grid gap-6 md:grid-cols-[260px_1fr]">
+        <aside className="hidden md:block md:sticky md:top-32 md:h-fit md:self-start md:w-[260px]">
+          {sidebar}
+        </aside>
+        <section className="min-w-0 max-w-5xl">{children}</section>
+      </div>
     </div>
   )
 }

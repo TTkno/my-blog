@@ -7,7 +7,7 @@ export function SidebarContent() {
   const tags = getAllTags()
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-4">
       <SidebarNav />
       <ProfileCard postCount={posts.length} tagCount={tags.length} />
     </div>

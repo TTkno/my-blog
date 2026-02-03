@@ -1,16 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-type Collection = { key: string; name: string; count: number }
-type Item = {
-  slug: string
-  title: string
-  date: string
-  collection: string
-}
-
+type Item = { slug: string; title: string; date: string }
 type Grouped = Record<string, Item[]>
 
 function groupByYear(posts: Item[]) {
@@ -27,99 +20,127 @@ function groupByYear(posts: Item[]) {
   return { map, years }
 }
 
-export function CollectionTabs({
-  defaultKey,
-  collections,
-  items,
-}: {
-  defaultKey: string
-  collections: Collection[]
-  items: Item[]
-}) {
-  const [active, setActive] = useState(defaultKey)
+const DOT_TOP_OFFSET = 5 // 年份圆点中心相对 section 顶部的偏移（约 h-2.5 一半 + 一点）
 
-  const filtered = useMemo(() => {
-    if (active === "default") return items
-    return items.filter((x) => x.collection === active)
-  }, [active, items])
+export function ArchiveTimeline({ items }: { items: Item[] }) {
+  const { map, years } = useMemo(() => groupByYear(items), [items])
+  const containerRef = useRef<HTMLDivElement>(null)
+  const sectionRefs = useRef<(HTMLElement | null)[]>([])
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [progressHeight, setProgressHeight] = useState(0)
 
-  const { map, years } = useMemo(() => groupByYear(filtered), [filtered])
+  const updateActiveAndProgress = useCallback(() => {
+    const container = containerRef.current
+    if (!container || years.length === 0) return
+
+    const containerRect = container.getBoundingClientRect()
+    const viewportMid = typeof window !== "undefined" ? window.innerHeight * 0.35 : 0
+
+    let newActive = 0
+    for (let i = 0; i < sectionRefs.current.length; i++) {
+      const el = sectionRefs.current[i]
+      if (!el) continue
+      const rect = el.getBoundingClientRect()
+      if (rect.top <= viewportMid) newActive = i
+    }
+
+    setActiveIndex(newActive)
+
+    const activeEl = sectionRefs.current[newActive]
+    if (activeEl) {
+      const containerTop = containerRect.top
+      const activeTop = activeEl.getBoundingClientRect().top
+      const h = Math.max(0, activeTop - containerTop + DOT_TOP_OFFSET)
+      setProgressHeight(h)
+    }
+  }, [years.length])
+
+  useEffect(() => {
+    const rafId = requestAnimationFrame(() => updateActiveAndProgress())
+    window.addEventListener("scroll", updateActiveAndProgress, { passive: true })
+    window.addEventListener("resize", updateActiveAndProgress)
+    return () => {
+      cancelAnimationFrame(rafId)
+      window.removeEventListener("scroll", updateActiveAndProgress)
+      window.removeEventListener("resize", updateActiveAndProgress)
+    }
+  }, [updateActiveAndProgress])
+
+  if (items.length === 0) {
+    return (
+      <p className="mt-8 text-sm" style={{ color: "rgb(var(--muted))" }}>
+        暂无文章
+      </p>
+    )
+  }
 
   return (
-    <div>
-      {/* summary */}
-      <div className="mb-4 text-sm muted">还行！目前共有 {filtered.length} 篇文章。继续努力。</div>
-      {/* tabs */}
-      <div className="flex flex-wrap gap-2">
-        {collections.map((c) => {
-          const isActive = c.key === active
-          return (
-            <button
-              key={c.key}
-              type="button"
-              onClick={() => setActive(c.key)}
-              className="rounded-full border px-3 py-1.5 text-sm transition hover:opacity-80"
-              style={{
-                borderColor: "rgb(var(--border))",
-                background: isActive ? "rgb(var(--surface2))" : "transparent",
-                color: isActive ? "rgb(var(--text))" : "rgb(var(--muted))",
-              }}
-            >
-              {c.name} <span className="opacity-60">({c.count})</span>
-            </button>
-          )
-        })}
-      </div>
+    <div ref={containerRef} className="relative pl-6 md:pl-12">
+      {/* 背景竖线 */}
+      <div
+        className="absolute left-3 md:left-6 top-0 bottom-0 w-px transition-[height] duration-150"
+        style={{ background: "rgb(var(--border))" }}
+        aria-hidden
+      />
+      {/* 跟随进度：从顶部到当前年份圆心的竖线 */}
+      <div
+        className="absolute left-3 md:left-6 top-0 w-px transition-[height] duration-150 ease-out"
+        style={{
+          height: progressHeight,
+          background: "rgb(var(--accent))",
+        }}
+        aria-hidden
+      />
 
-      {/* timeline */}
-        {filtered.length === 0 ? (
-        <p className="mt-8 text-sm muted">这个档案下还没有文章。</p>
-      ) : (
-        <div className="relative mt-8 pl-6 md:pl-12">
-          {/* 竖线 */}
-          <div
-            className="absolute left-3 md:left-6 top-0 bottom-0 w-px"
-            style={{ background: "rgba(0,0,0,0.06)" }}
+      {years.map((y, i) => (
+        <section
+          key={y}
+          ref={(el) => {
+            sectionRefs.current[i] = el
+          }}
+          className="mb-8 md:mb-12 relative scroll-mt-24"
+        >
+          <span
+            className="absolute -left-3 md:-left-6 top-0 h-2.5 w-2.5 rounded-full border-2 border-[rgb(var(--surface))] transition-colors duration-150"
+            style={{
+              background: i === activeIndex ? "rgb(var(--accent))" : "rgb(var(--border))",
+            }}
+            aria-hidden
           />
 
-          {years.map((y) => (
-            <section key={y} className="mb-8 md:mb-12 relative">
-              {/* year marker dot */}
-              <span className="absolute -left-3 md:-left-6 top-0 h-3 w-3 rounded-full" style={{ background: "rgba(0,0,0,0.2)" }} />
+          <h2 className="text-xl md:text-2xl font-semibold tracking-tight mb-3 md:mb-4" style={{ color: "rgb(var(--text))" }}>
+            {y}
+          </h2>
 
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3 md:mb-4">{y}</h2>
+          <ul className="mt-2 space-y-4" role="list">
+            {(map[y] ?? []).map((p) => {
+              const mmdd = (p.date || "").slice(5) || ""
+              return (
+                <li key={p.slug} className="relative">
+                  <span
+                    className="absolute -left-3 md:-left-6 top-3 h-1.5 w-1.5 rounded-full"
+                    style={{ background: "rgb(var(--border))" }}
+                  />
 
-              <ul className="mt-2 space-y-4">
-                {(map[y] ?? []).map((p) => {
-                  const mmdd = (p.date || "").slice(5) || ""
-                  return (
-                    <li key={p.slug} className="relative">
-                      {/* 节点 */}
-                      <span
-                        className="absolute -left-3 md:-left-6 top-3 h-2 w-2 rounded-full"
-                        style={{ background: "rgba(0,0,0,0.12)" }}
-                      />
-
-                      <div className="flex items-center gap-2 md:gap-4">
-                        <div className="w-10 md:w-14 text-xs md:text-sm muted">{mmdd}</div>
-
-                        <Link className="hover:opacity-90 text-xs md:text-sm" href={`/blog/${p.slug}`}>
-                          {p.title}
-                        </Link>
-
-                        <div
-                          className="hidden sm:flex flex-1 border-b border-dashed"
-                          style={{ borderColor: "rgba(0,0,0,0.06)" }}
-                        />
-                      </div>
-                    </li>
-                  )
-                })}
-              </ul>
-            </section>
-          ))}
-        </div>
-      )}
+                  <div className="flex items-baseline gap-2 md:gap-4 min-w-0">
+                    <span className="shrink-0 w-10 md:w-14 text-xs md:text-sm tabular-nums" style={{ color: "rgb(var(--muted))" }}>
+                      {mmdd}
+                    </span>
+                    <Link
+                      className="min-w-0 truncate text-sm md:text-base transition-colors hover:opacity-80"
+                      href={`/blog/${p.slug}`}
+                      style={{ color: "rgb(var(--text))" }}
+                    >
+                      {p.title}
+                    </Link>
+                    <span className="hidden sm:block flex-1 min-w-4 border-b border-dashed shrink-0" style={{ borderColor: "rgb(var(--border) / 0.5)" }} />
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ))}
     </div>
   )
 }

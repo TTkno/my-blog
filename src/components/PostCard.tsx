@@ -26,7 +26,7 @@ export function PostCard({ post }: { post: PostListItem }) {
       className="group block overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-lg"
       style={{
         borderColor: "rgb(var(--border))",
-        background: "rgb(var(--surface) / 0.88)",
+        background: "rgb(var(--surface))",
       }}
     >
       {/* 顶部装饰渐变线 */}
@@ -55,9 +55,9 @@ export function PostCard({ post }: { post: PostListItem }) {
           )}
         </div>
 
-        {/* 标题：悬停时变色 */}
+        {/* 标题：悬停时变为主题色 */}
         <h3
-          className="mt-3 text-lg font-semibold tracking-tight transition-colors duration-200 group-hover:text-accent"
+          className="group-hover-accent mt-3 text-lg font-semibold tracking-tight transition-colors duration-200"
           style={{ color: "rgb(var(--text))" }}
         >
           {meta.title}

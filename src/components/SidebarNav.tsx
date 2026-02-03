@@ -11,8 +11,8 @@ const items = [
 
 export function SidebarNav() {
   return (
-    <div className="card p-3">
-      <nav className="flex flex-col gap-1">
+    <div className="card p-2.5">
+      <nav className="flex flex-col gap-0.5">
         {items.map((it) => (
           <NavLink
             key={it.href}

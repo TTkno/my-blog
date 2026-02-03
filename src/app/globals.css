@@ -21,8 +21,19 @@
   --ring: 99 102 241;     /* indigo */
 
   --radius: 22px;
-  --shadow: 0 18px 60px rgba(15, 23, 42, 0.08);
-  --shadow2: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --card-radius: 16px;
+  --shadow: 0 4px 24px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow2: 0 8px 32px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+  --shadow-hover: 0 12px 40px rgba(15, 23, 42, 0.1), 0 4px 12px rgba(15, 23, 42, 0.06);
+
+  /* 代码块：统一深色底（VS Code Dark+ 风格），高对比便于阅读 */
+  --code-bg: 26 26 26;
+  --code-text: 230 230 230;
+  --code-border: 55 55 55;
+  --code-caption-bg: 42 42 42;
+  --code-caption-text: 180 180 180;
+  --code-select-bg: 59 130 246;
+  --code-select-text: 255 255 255;
 }
 
 html.dark {
@@ -30,14 +41,25 @@ html.dark {
   --surface: 16 21 29;
   --surface2: 22 29 39;
 
-  --text: 232 237 245;
-  --muted: 160 170 185;
+  /* 暗主题正文提高对比度，便于阅读 */
+  --text: 248 250 252;
+  --muted: 203 213 225;
 
-  --border: 42 52 68;
+  --border: 51 65 85;
   --ring: 59 130 246;
 
-  --shadow: 0 20px 70px rgba(0, 0, 0, 0.35);
-  --shadow2: 0 10px 30px rgba(0, 0, 0, 0.28);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow2: 0 8px 32px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.14);
+  --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.16);
+
+  /* 代码块：同上，深色底 + 语法高亮 */
+  --code-bg: 26 26 26;
+  --code-text: 230 230 230;
+  --code-border: 55 55 55;
+  --code-caption-bg: 42 42 42;
+  --code-caption-text: 180 180 180;
+  --code-select-bg: 59 130 246;
+  --code-select-text: 255 255 255;
 }
 
 /* =========================================================
@@ -57,20 +79,41 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* 全局键盘焦点：链接与按钮 focus-visible 使用主题环（卡片链接由下方规则覆盖） */
+a[href]:focus-visible,
+button:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: 2px;
+}
+
 /* =========================================================
    3) Components (可复用组件)
    ========================================================= */
 .card {
   background: rgb(var(--surface));
   border: 1px solid rgb(var(--border));
-  border-radius: var(--radius);
+  border-radius: var(--card-radius);
   box-shadow: var(--shadow);
-  transition: all 0.2s ease;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.2s ease;
 }
 
 .card:hover {
-  box-shadow: var(--shadow2);
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+  border-color: rgb(var(--border));
+}
+
+/* 消除卡片链接的焦点环，避免右上角出现浅色圆形 */
+a:has(> .card),
+a.card-link {
+  outline: none;
+}
+a:has(> .card):focus,
+a:has(> .card):focus-visible,
+a.card-link:focus,
+a.card-link:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 .chip {
@@ -96,9 +139,61 @@ body {
   color: rgb(var(--muted));
 }
 
+/* 侧栏导航项：悬停背景 + 键盘焦点环 */
+.nav-pill {
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+.nav-pill:hover {
+  background: rgb(var(--surface2));
+  border-color: rgb(var(--border) / 0.6);
+}
+.nav-pill:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: 2px;
+}
+
+/* 卡片内标题悬停时使用主题色（与 Tailwind text-accent 一致用 CSS 变量） */
+.group:hover .group-hover-accent {
+  color: rgb(var(--accent));
+}
+
+/* 目录项：非当前项颜色与悬停（适配明暗主题） */
+.toc-item-inactive {
+  color: rgb(var(--muted));
+}
+.toc-item-inactive:hover {
+  background: rgb(var(--surface2) / 0.8);
+  color: rgb(var(--text));
+}
+
 /* =========================================================
-   4) Utilities (辅助类)
+   4) Layout 与 Utilities
    ========================================================= */
+.app-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
 .glass {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
@@ -108,6 +203,13 @@ body {
 .dark .glass {
   background: rgba(16, 21, 29, 0.8);
   border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 顶部导航 + 阅读进度条：不透明背景，避免下滑时侧栏/主内容与进度条重叠 */
+.glass-header {
+  background: rgb(var(--surface));
+  border-bottom: 1px solid rgb(var(--border));
+  box-shadow: 0 1px 3px rgb(var(--border) / 0.3);
 }
 
 /* =========================================================
@@ -158,23 +260,215 @@ body {
 }
 
 /* =========================================================
-   7) 代码块样式
+   7) 代码块样式（高对比、易读、优化 UI）
    ========================================================= */
-.prose pre {
-  background: rgb(30, 30, 30) !important;
-  color: rgb(248, 248, 242) !important;
-  border-radius: 8px !important;
-  padding: 1rem !important;
-  margin: 1.5rem 0 !important;
+.prose pre,
+.prose figure[data-rehype-pretty-code-figure] pre {
+  background: rgb(var(--code-bg)) !important;
+  color: rgb(var(--code-text)) !important;
+  border-radius: 0 0 14px 14px !important;
+  padding: 1.25rem 1.5rem !important;
+  margin: 0 !important;
   overflow-x: auto !important;
+  font-size: 0.9375rem !important;
+  line-height: 1.75 !important;
+  letter-spacing: 0.01em !important;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "Source Code Pro", Menlo, Consolas, "DejaVu Sans Mono", monospace !important;
+  border: 1px solid rgb(var(--code-border));
+  border-top: none !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  -webkit-font-smoothing: antialiased;
 }
 
-.prose code {
+/* 代码块内选中高亮 */
+.prose pre::selection,
+.prose pre *::selection,
+.prose figure[data-rehype-pretty-code-figure] pre::selection,
+.prose figure[data-rehype-pretty-code-figure] pre *::selection {
+  background: rgb(var(--code-select-bg) / 0.35);
+  color: inherit;
+}
+
+.prose pre code,
+.prose figure[data-rehype-pretty-code-figure] pre code {
+  background: transparent !important;
+  color: inherit;
+  padding: 0 !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-family: inherit !important;
+}
+
+/* 不覆盖 code 内 span 的 color，让 Shiki (dark-plus) 的语法高亮内联样式生效 */
+
+
+/* 行内 code（非 pre 内） */
+.prose :not(pre) > code {
   background: rgb(var(--surface2)) !important;
   color: rgb(var(--text)) !important;
-  padding: 0.2rem 0.4rem !important;
-  border-radius: 4px !important;
+  padding: 0.2rem 0.5rem !important;
+  border-radius: 6px !important;
   font-size: 0.875em !important;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace !important;
+  border: 1px solid rgb(var(--border));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 文章页正文阅读区背景（宽度由父级决定，不再限制 max-width） */
+.article-content {
+  background: rgb(var(--surface));
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow);
+  padding: 1.75rem 1.5rem;
+  margin-top: 0.5rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+@media (min-width: 768px) {
+  .article-content {
+    padding: 2.25rem 2rem;
+  }
+}
+
+/* 小标题后的 # 不显示 */
+.prose .heading-anchor {
+  display: none;
+}
+
+/* 正文与标题随主题色，暗主题可读 */
+.prose,
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6,
+.prose p, .prose li, .prose blockquote, .prose td, .prose th {
+  color: rgb(var(--text));
+}
+.prose blockquote {
+  border-color: rgb(var(--border));
+  background: rgb(var(--surface2) / 0.5);
+}
+.prose th {
+  background: rgb(var(--surface2));
+}
+.prose table {
+  border-color: rgb(var(--border));
+}
+
+/* 代码块卡片：语言栏 + 代码区一体，圆角与阴影 */
+.prose figure[data-rehype-pretty-code-figure] {
+  margin: 1.5rem 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgb(var(--code-border));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  background: rgb(var(--code-caption-bg));
+}
+
+.prose figure[data-rehype-pretty-code-figure] pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding-top: 0.875rem !important;
+}
+
+.prose figure[data-rehype-pretty-code-figure] > figcaption {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: rgb(var(--code-caption-text));
+  padding: 0.5rem 1rem 0.5rem 1rem;
+  background: rgb(var(--code-caption-bg));
+  border-bottom: 1px solid rgb(var(--code-border));
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* 代码块包装器：复制按钮定位 + 卡片感（无 figcaption 时整块圆角） */
+.prose .code-wrap {
+  position: relative;
+  margin: 1.5rem 0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.prose .code-wrap pre {
+  margin: 0 !important;
+  min-height: 2.5rem;
+}
+
+/* 单独 pre（无 figure）时整块圆角+边框 */
+.prose .code-wrap pre {
+  border-radius: 14px !important;
+  border: 1px solid rgb(var(--code-border)) !important;
+}
+.prose figure[data-rehype-pretty-code-figure] .code-wrap pre {
+  border-radius: 0 0 14px 14px !important;
+  border-top: none !important;
+}
+
+/* 复制按钮：悬停/聚焦时显示，清晰可点，带悬停与成功反馈 */
+.prose .code-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 4;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgb(var(--code-caption-text));
+  background: rgb(var(--code-caption-bg));
+  border: 1px solid rgb(var(--code-border));
+  border-radius: 8px;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.prose .code-wrap:hover .code-copy,
+.prose .code-wrap .code-copy:focus {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.prose .code-wrap .code-copy:hover {
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+  border-color: rgb(var(--border));
+  transform: scale(1.05);
+}
+
+.prose .code-wrap .code-copy:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: 2px;
+}
+
+.prose .code-wrap .code-copy[data-copied="1"] {
+  color: rgb(var(--accent));
+  background: rgb(var(--accent) / 0.12);
+  border-color: rgb(var(--accent) / 0.35);
+}
+
+/* 代码块横向滚动条样式（与主题一致） */
+.prose pre::-webkit-scrollbar {
+  height: 6px;
+}
+.prose pre::-webkit-scrollbar-track {
+  background: rgb(var(--code-bg));
+  border-radius: 3px;
+}
+.prose pre::-webkit-scrollbar-thumb {
+  background: rgb(var(--code-border));
+  border-radius: 3px;
+}
+.prose pre::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--muted));
 }
 
 /* =========================================================

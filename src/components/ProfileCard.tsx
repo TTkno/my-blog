@@ -9,8 +9,8 @@ export function ProfileCard({
   tagCount: number
 }) {
   return (
-    <div className="card p-6">
-      <div className="flex items-center gap-4">
+    <div className="card p-4">
+      <div className="flex items-center gap-3">
         {/* ✅ 圆形头像：不用 fill，避免被全局 img 样式干扰 */}
         <div
           className="shrink-0 overflow-hidden rounded-full border"
@@ -19,39 +19,39 @@ export function ProfileCard({
           <Image
             src={site.avatar || "/avatar.png"}
             alt={site.name}
-            width={64}
-            height={64}
+            width={48}
+            height={48}
             priority
-            className="h-16 w-16 object-cover object-center"
+            className="h-12 w-12 object-cover object-center"
           />
         </div>
 
         <div className="min-w-0">
-          <div className="truncate text-lg font-semibold tracking-tight">
+          <div className="truncate text-base font-semibold tracking-tight">
             {site.name}
           </div>
-          <div className="mt-1 line-clamp-2 text-sm muted">{site.subtitle}</div>
+          <div className="mt-0.5 line-clamp-2 text-xs muted">{site.subtitle}</div>
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-between">
+      <div className="mt-4 flex items-center justify-between">
         <div className="text-center">
-          <div className="text-xl font-semibold">{postCount}</div>
-          <div className="mt-1 text-xs muted">文章</div>
+          <div className="text-lg font-semibold">{postCount}</div>
+          <div className="mt-0.5 text-xs muted">文章</div>
         </div>
 
-        <div className="h-10 w-px" style={{ background: "rgb(var(--border))" }} />
+        <div className="h-8 w-px" style={{ background: "rgb(var(--border))" }} />
 
         <div className="text-center">
-          <div className="text-xl font-semibold">{tagCount}</div>
-          <div className="mt-1 text-xs muted">标签</div>
+          <div className="text-lg font-semibold">{tagCount}</div>
+          <div className="mt-0.5 text-xs muted">标签</div>
         </div>
       </div>
 
       {(site.socials?.length ?? 0) > 0 ? (
-        <div className="mt-6">
+        <div className="mt-4">
           <div className="text-xs font-semibold tracking-wide muted">Social</div>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {site.socials!.map((s) => (
               <a
                 key={s.href}

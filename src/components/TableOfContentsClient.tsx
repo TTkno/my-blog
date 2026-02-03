@@ -6,10 +6,13 @@ import type { TocItem } from "@/components/TableOfContents"
 export function TableOfContentsClient({
   items,
   embedded,
+  hideTitle,
 }: {
   items: TocItem[]
-  /** 嵌入合并卡片内时不单独包一层 card */
+  /** 嵌入合并卡片内时不单独包一层 card，避免卡片叠卡片 */
   embedded?: boolean
+  /** 嵌入时隐藏「目录」标题，避免与外部重复 */
+  hideTitle?: boolean
 }) {
   const [active, setActive] = useState<string>("")
 
@@ -47,11 +50,13 @@ export function TableOfContentsClient({
   if (!items.length) return null
 
   const wrapperClassName = embedded ? "" : "card p-4"
-  const titleClassName = embedded ? "text-xs font-semibold text-gray-900 mb-2" : "text-sm font-semibold mb-3"
+  const titleClassName = embedded ? "text-xs font-semibold mb-2" : "text-sm font-semibold mb-3"
 
   return (
     <div className={wrapperClassName}>
-      <div className={titleClassName}>目录</div>
+      {!hideTitle && (
+        <div className={titleClassName} style={{ color: "rgb(var(--text))" }}>目录</div>
+      )}
       <nav
         className="space-y-0.5 text-sm max-h-[50vh] overflow-y-auto"
         aria-label="文章目录"
@@ -67,13 +72,11 @@ export function TableOfContentsClient({
                   href={`#${it.id}`}
                   className={[
                     "block rounded-md px-2 py-1.5 text-left transition-colors border-l-2",
-                    isActive
-                      ? "text-gray-900 font-medium"
-                      : "text-gray-600 hover:bg-black/5 hover:text-gray-800 border-transparent",
+                    isActive ? "font-medium" : "border-transparent toc-item-inactive",
                   ].join(" ")}
                   style={
                     isActive
-                      ? { borderLeftColor: "rgb(var(--accent))", background: "rgb(var(--accent) / 0.1)" }
+                      ? { borderLeftColor: "rgb(var(--accent))", background: "rgb(var(--accent) / 0.1)", color: "rgb(var(--text))" }
                       : undefined
                   }
                   onClick={() => setActive(it.id)}

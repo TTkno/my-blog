@@ -36,24 +36,24 @@ export function CodeCopyButtons({ scopeSelector = "article" }: { scopeSelector?:
       const btn = document.createElement("button")
       btn.type = "button"
       btn.className = "code-copy"
-      btn.setAttribute("aria-label", "Copy code")
-      btn.innerText = "Copy"
+      btn.setAttribute("aria-label", "复制代码")
+      btn.innerText = "复制"
 
       btn.addEventListener("click", async () => {
         const text = getCodeText(pre)
         try {
           await navigator.clipboard.writeText(text)
-          btn.innerText = "Copied"
+          btn.innerText = "已复制"
           btn.setAttribute("data-copied", "1")
           window.setTimeout(() => {
-            btn.innerText = "Copy"
+            btn.innerText = "复制"
             btn.removeAttribute("data-copied")
-          }, 1100)
+          }, 1200)
         } catch {
-          btn.innerText = "Failed"
+          btn.innerText = "复制失败"
           window.setTimeout(() => {
-            btn.innerText = "Copy"
-          }, 1100)
+            btn.innerText = "复制"
+          }, 1200)
         }
       })
 

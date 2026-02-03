@@ -20,8 +20,7 @@ export function FadeIn({
   children,
   delay = 0,
   noY = false,
-  stagger = false,
-  staggerDelay = 0.05,
+  // stagger / staggerDelay 保留在 FadeInProps 中供 API 兼容，本组件未使用
 }: FadeInProps) {
   const reduced = useReducedMotion()
 

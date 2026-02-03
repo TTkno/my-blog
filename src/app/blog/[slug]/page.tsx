@@ -11,6 +11,7 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings"
 import GithubSlugger from "github-slugger"
 import {
   getAllPosts,
+  getAllTags,
   getPostBySlug,
   getPrevNextBySlug,
   type PostMeta,
@@ -18,6 +19,8 @@ import {
 import { site } from "@/site"
 import type { TocItem } from "@/components/TableOfContents"
 import { TableOfContentsClient } from "@/components/TableOfContentsClient"
+import { SidebarNav } from "@/components/SidebarNav"
+import { ArticleSidebarCard } from "@/components/ArticleSidebarCard"
 
 const baseUrl =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000"
@@ -142,7 +145,7 @@ export default async function PostPage({
         remarkPlugins: [remarkMath],
         rehypePlugins: [
           rehypeKatex,
-          [rehypePrettyCode, { theme: "github-light", keepBackground: false }],
+          [rehypePrettyCode, { theme: "dark-plus", keepBackground: false }],
           rehypeSlug,
           [
             rehypeAutolinkHeadings,
@@ -157,84 +160,52 @@ export default async function PostPage({
     },
   })
 
+  const canonicalUrl = `${baseUrl}/blog/${encodeURIComponent(slug)}`
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: meta.title,
+    description: meta.description || site.subtitle,
+    datePublished: toISODate(meta.date),
+    dateModified: toISODate(meta.updated ?? meta.date),
+    author: { "@type": "Person", name: site.name },
+    url: canonicalUrl,
+    ...(meta.tags?.length ? { keywords: meta.tags.join(", ") } : {}),
+  }
+
   return (
     <>
-      {/* 简洁阅读布局 - 合并目录和概要卡片 */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* 顶部标题栏 */}
-        <div className="mb-8">
-          <Link className="text-sm text-gray-600 hover:text-gray-800 mb-4 inline-block" href="/blog">
-            ← 返回文章列表
-          </Link>
-          
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{meta.title}</h1>
-        </div>
-
-        {/* 主要内容区域 */}
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* 左侧合并卡片 - 桌面端显示 */}
-          <aside className="hidden lg:block w-80 flex-shrink-0">
-            <div className="sticky top-6 bg-gray-50 rounded-lg border border-gray-200 p-6 shadow-sm">
-              {/* 文章概要 */}
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">文章概要</h2>
-                
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">发布时间</span>
-                    <span className="text-gray-900">{meta.date}</span>
-                  </div>
-                  
-                  {meta.updated && meta.updated !== meta.date && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">最后更新</span>
-                      <span className="text-gray-900">{meta.updated}</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">阅读时间</span>
-                    <span className="text-gray-900">{readMinutes}分钟</span>
-                  </div>
-                  
-                  {meta.draft && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">状态</span>
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">草稿</span>
-                    </div>
-                  )}
-                </div>
-                
-                {/* 标签 */}
-                {meta.tags?.length ? (
-                  <div className="mt-4">
-                    <div className="text-sm text-gray-600 mb-2">标签</div>
-                    <div className="flex flex-wrap gap-1">
-                      {meta.tags.map((t) => (
-                        <span key={t} className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-              
-              {/* 目录 */}
-              {toc.length > 0 && (
-                <div className="pt-4 border-t border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-3">目录</h2>
-                  <TableOfContentsClient items={toc} />
-                </div>
-              )}
-            </div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      {/* 阅读布局：左侧导航 + 介绍/文章概要合并卡片，右侧正文 */}
+      <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12 py-6 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-12">
+          {/* 左侧：导航 + 介绍/文章概要可切换卡片，留足间距避免重叠 */}
+          <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start space-y-5">
+            <SidebarNav />
+            <ArticleSidebarCard
+              toc={toc}
+              postCount={getAllPosts().length}
+              tagCount={getAllTags().length}
+            />
           </aside>
 
-          {/* 文章正文 */}
-          <article className="flex-1 min-w-0">
+          <div className="min-w-0">
+            {/* 顶部标题栏 */}
+            <div className="mb-6 sm:mb-8">
+              <Link className="text-sm muted hover:opacity-90 mb-3 inline-block" href="/" style={{ color: "rgb(var(--muted))" }}>
+                ← 返回首页
+              </Link>
+              <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: "rgb(var(--text))" }}>{meta.title}</h1>
+            </div>
+
+            {/* 文章正文 */}
+            <article className="min-w-0">
             {/* 移动端信息栏 */}
-            <div className="lg:hidden bg-gray-50 rounded-lg border border-gray-200 p-4 mb-6">
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-3">
+            <div className="lg:hidden card p-4 mb-6">
+              <div className="flex flex-wrap items-center gap-4 text-sm mb-3 muted" style={{ color: "rgb(var(--muted))" }}>
                 <span>{meta.date}</span>
                 {meta.updated && meta.updated !== meta.date && (
                   <>
@@ -247,7 +218,7 @@ export default async function PostPage({
                 {meta.draft && (
                   <>
                     <span>·</span>
-                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">草稿</span>
+                    <span className="px-2 py-1 rounded text-xs" style={{ background: "rgb(var(--surface2))", color: "rgb(var(--accent))", border: "1px solid rgb(var(--border))" }}>草稿</span>
                   </>
                 )}
               </div>
@@ -256,7 +227,7 @@ export default async function PostPage({
               {meta.tags?.length ? (
                 <div className="flex flex-wrap gap-2">
                   {meta.tags.map((t) => (
-                    <span key={t} className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
+                    <span key={t} className="px-2 py-1 rounded text-xs" style={{ background: "rgb(var(--surface2))", color: "rgb(var(--text))", border: "1px solid rgb(var(--border))" }}>
                       {t}
                     </span>
                   ))}
@@ -266,8 +237,8 @@ export default async function PostPage({
 
             {/* 移动端目录 */}
             {toc.length > 0 && (
-              <details className="lg:hidden bg-gray-50 rounded-lg border border-gray-200 p-4 mb-6">
-                <summary className="cursor-pointer font-medium text-gray-900">
+              <details className="lg:hidden card p-4 mb-6">
+                <summary className="cursor-pointer font-medium" style={{ color: "rgb(var(--text))" }}>
                   目录
                 </summary>
                 <div className="mt-3">
@@ -277,57 +248,74 @@ export default async function PostPage({
             )}
 
             <CodeCopyButtons scopeSelector="article" />
-            
-            <div
-              className="prose prose-lg max-w-none
-                prose-headings:text-gray-900
-                prose-p:text-gray-700
-                prose-p:leading-7
-                prose-headings:font-bold
-                prose-h2:mt-12 prose-h2:mb-6
-                prose-h3:mt-8 prose-h3:mb-4
-                prose-hr:my-12
-                prose-img:rounded-lg prose-img:shadow-md
-                prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:bg-gray-50
-                prose-code:bg-gray-100 prose-code:px-1 prose-code:rounded
-                prose-pre:bg-gray-50 prose-pre:text-gray-800
-                prose-table:border prose-table:border-gray-300
-                prose-th:bg-gray-100 prose-th:font-semibold"
-            >
-              {rendered}
+
+            {/* 正文阅读区：独立背景 + 内边距，与页面背景区分 */}
+            <div className="article-content">
+              <div
+                className="prose prose-lg max-w-none
+                  prose-p:leading-7
+                  prose-headings:font-bold
+                  prose-h2:mt-10 prose-h2:mb-4
+                  prose-h3:mt-6 prose-h3:mb-3
+                  prose-hr:my-8
+                  prose-img:rounded-lg prose-img:shadow-md
+                  prose-blockquote:border-l-4"
+              >
+                {rendered}
+              </div>
             </div>
 
-            {/* 上一篇/下一篇导航 */}
-            {(prev || next) ? (
-              <div className="mt-12 grid gap-4 sm:grid-cols-2">
-                {next ? (
-                  <Link
-                    href={`/blog/${next.slug}`}
-                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="text-sm text-gray-600">下一篇</div>
-                    <div className="mt-1 font-semibold text-gray-900">{next.meta.title}</div>
-                    <div className="mt-1 text-sm text-gray-500">{next.meta.date}</div>
-                  </Link>
-                ) : (
-                  <div />
-                )}
-
-                {prev ? (
-                  <Link
-                    href={`/blog/${prev.slug}`}
-                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-right"
-                  >
-                    <div className="text-sm text-gray-600">上一篇</div>
-                    <div className="mt-1 font-semibold text-gray-900">{prev.meta.title}</div>
-                    <div className="mt-1 text-sm text-gray-500">{prev.meta.date}</div>
-                  </Link>
-                ) : (
-                  <div />
-                )}
-              </div>
-            ) : null}
-          </article>
+            {/* 文章底部：标签（居中）+ 分隔线 + 上一篇（左对齐） */}
+            <footer className="mt-12 pt-8">
+              {meta.tags?.length ? (
+                <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mb-6">
+                  {meta.tags.map((t) => (
+                    <Link
+                      key={t}
+                      href={`/tags/${encodeURIComponent(t)}`}
+                      className="text-sm transition-colors hover:opacity-80 underline underline-offset-2 decoration-[rgb(var(--border))] hover:decoration-[rgb(var(--text))]"
+                      style={{ color: "rgb(var(--muted))" }}
+                    >
+                      {t}
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+              <div
+                className="w-full h-px mb-6"
+                style={{ background: "rgb(var(--border))" }}
+              />
+              {(prev || next) ? (
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  {prev ? (
+                    <Link
+                      href={`/blog/${prev.slug}`}
+                      className="text-sm transition-colors hover:opacity-80 inline-flex items-center gap-1"
+                      style={{ color: "rgb(var(--muted))" }}
+                    >
+                      <span aria-hidden>←</span>
+                      {prev.meta.title}
+                    </Link>
+                  ) : (
+                    <span />
+                  )}
+                  {next ? (
+                    <Link
+                      href={`/blog/${next.slug}`}
+                      className="text-sm transition-colors hover:opacity-80 inline-flex items-center gap-1"
+                      style={{ color: "rgb(var(--muted))" }}
+                    >
+                      {next.meta.title}
+                      <span aria-hidden>→</span>
+                    </Link>
+                  ) : (
+                    <span />
+                  )}
+                </div>
+              ) : null}
+            </footer>
+            </article>
+          </div>
         </div>
       </div>
     </>

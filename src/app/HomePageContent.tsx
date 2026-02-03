@@ -39,7 +39,7 @@ export function HomePageContent({ latest }: { latest: PostListItem[] }) {
       <FadeIn delay={0.15}>
         <div className="pt-4">
           <nav className="flex items-center gap-3 text-sm muted" aria-label="文章导航">
-            <Link href="/blog" className="hover:underline">
+            <Link href="/archives" className="hover:underline">
               更多文章 →
             </Link>
           </nav>
@@ -59,7 +59,10 @@ function HomeCard({
   const isUpdated = meta.updated && meta.updated !== meta.date
 
   return (
-    <Link href={`/blog/${slug}`} className="block group">
+    <Link
+      href={`/blog/${slug}`}
+      className="block group card-link outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
+    >
       <article
         className="card overflow-hidden p-6 sm:p-8 md:p-10 transition-all duration-200 hover:shadow-lg"
         style={{ borderColor: "rgb(var(--border))", background: "rgb(var(--surface))" }}

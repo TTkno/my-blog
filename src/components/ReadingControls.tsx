@@ -8,16 +8,14 @@ interface ReadingControlsProps {
 }
 
 export function ReadingControls({ articleId, content }: ReadingControlsProps) {
-  // 使用useMemo计算阅读时间，避免useEffect中的setState
-  const readingTime = useMemo(() => {
+  useMemo(() => {
     const chineseCharCount = content.replace(/[^\u4e00-\u9fa5]/g, '').length
     const englishWordCount = content.split(/\s+/).filter(word => word.length > 0).length
     const totalWords = chineseCharCount + englishWordCount
-    return Math.ceil(totalWords / 200) // 200字/分钟
+    return Math.ceil(totalWords / 200)
   }, [content])
 
-  // 使用useState的初始化函数，避免useEffect中的setState
-  const [fontSize, setFontSize] = useState(() => {
+  const [fontSize] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedFontSize = localStorage.getItem('reading-font-size')
       return savedFontSize ? Number(savedFontSize) : 16
@@ -25,7 +23,7 @@ export function ReadingControls({ articleId, content }: ReadingControlsProps) {
     return 16
   })
 
-  const [isFocusMode, setIsFocusMode] = useState(() => {
+  const [isFocusMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedFocusMode = localStorage.getItem('reading-focus-mode')
       return savedFocusMode === 'true'
@@ -33,7 +31,7 @@ export function ReadingControls({ articleId, content }: ReadingControlsProps) {
     return false
   })
 
-  const [readingProgress, setReadingProgress] = useState(() => {
+  const [readingProgress] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedProgress = localStorage.getItem(`reading-progress-${articleId}`)
       return savedProgress ? Number(savedProgress) : 0

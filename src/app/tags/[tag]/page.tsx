@@ -1,13 +1,6 @@
 import Link from "next/link"
 import { getAllPosts } from "@/lib/posts"
-
-const BAD = new Set(["", "undefined", "null", "nan"])
-const keyOf = (v: unknown) => {
-  const s = String(v ?? "").trim()
-  const k = s.toLowerCase()
-  if (BAD.has(k)) return ""
-  return k
-}
+import { resolveTagToCanonical, getCanonicalDisplayName } from "@/lib/tagAliases"
 
 export default async function TagTimelinePage({
   params,
@@ -15,27 +8,20 @@ export default async function TagTimelinePage({
   params: Promise<{ tag: string }>
 }) {
   const { tag } = await params
-  const tagKey = keyOf(decodeURIComponent(tag ?? ""))
-
-console.log("[TagPage] raw tag param =", tag)
-console.log("[TagPage] decoded =", decodeURIComponent(tag ?? ""), "tagKey =", tagKey)
+  const slug = decodeURIComponent(tag ?? "").trim()
+  const canonical = resolveTagToCanonical(slug) || slug.toLowerCase() || ""
 
   const all = getAllPosts()
-  
-  const posts = all
-    .filter((p) => (p.meta.tags ?? []).some((t) => keyOf(t) === tagKey))
-    .slice()
-    .sort((a, b) => (a.meta.date < b.meta.date ? 1 : -1))
+  const posts = canonical
+    ? all
+        .filter((p) =>
+          (p.meta.tags ?? []).some((t) => resolveTagToCanonical(t) === canonical)
+        )
+        .slice()
+        .sort((a, b) => (a.meta.date < b.meta.date ? 1 : -1))
+    : []
 
-  // 展示名：从文章里找一个原始 tag（比如你写的是 “DP”）
-  let display = tagKey
-  for (const p of posts) {
-    const hit = (p.meta.tags ?? []).find((t) => keyOf(t) === tagKey)
-    if (hit) {
-      display = String(hit).trim() || tagKey
-      break
-    }
-  }
+  const display = getCanonicalDisplayName(canonical) || slug || "?"
 
   // year -> posts
   const map = new Map<string, typeof posts>()
